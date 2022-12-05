@@ -1,0 +1,4 @@
+[run]
+omit =
+    yretain/config/gunicorn.py
+    yretain/__main__.py
