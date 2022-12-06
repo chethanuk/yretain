@@ -66,7 +66,7 @@ def get_application():
     app.include_router(root_api_router)
     log.debug("Register global exception handler for custom HTTPException.")
     app.add_exception_handler(HTTPException, http_exception_handler)
-    app.include_router(CRUDRouter(schema=Coupons))
-    app.include_router(CRUDRouter(schema=Users))
+    app.include_router(CRUDRouter(schema=Coupons, paginate=10))
+    app.include_router(CRUDRouter(schema=Users, paginate=10))
 
     return app

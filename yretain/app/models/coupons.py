@@ -4,6 +4,6 @@ from pydantic import BaseModel
 class Coupons(BaseModel):
     id: int
     code: str
-    message: float
+    message: str
     expiry_days: int
 
