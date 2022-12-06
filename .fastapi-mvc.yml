@@ -1,0 +1,21 @@
+# Changes here will be overwritten by Copier
+_commit: 0.1.1
+_src_path: https://github.com/fastapi-mvc/copier-project.git
+aiohttp: true
+author: Vishwas
+chart_name: yretain
+container_image_name: yretain
+copyright_date: '2022'
+email: vishwas@gmail.com
+fastapi_mvc_version: 0.20.0
+github_actions: true
+helm: true
+license: Apache2.0
+nix: true
+package_name: yretain
+project_description: This project was generated with fastapi-mvc.
+project_name: yretain
+redis: true
+repo_url: https://yretain.com
+script_name: yretain
+version: 0.1.0
