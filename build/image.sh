@@ -8,12 +8,13 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+IMAGE=yretain:"$TAG"
 if command -v docker &> /dev/null; then
   echo "[image] Found docker-engine, begin building image."
-  docker build -t yretain:"$TAG" .
+  docker build -t $IMAGE .
 elif command -v podman &> /dev/null; then
   echo "[image] Found podman container engine, begin building image."
-  podman build -t yretain:"$TAG" .
+  podman build -t $IMAGE .
 else
   echo "[image] Neither docker nor podman container engine found."
   exit 1

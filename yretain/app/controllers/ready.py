@@ -48,5 +48,6 @@ async def readiness_check():
                 code=502, message="Could not connect to Redis"
             ).dict(exclude_none=True),
         )
+    # MYSQL
 
     return ReadyResponse(status="ok")

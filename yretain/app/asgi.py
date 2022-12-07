@@ -2,23 +2,22 @@
 import logging
 
 from fastapi import Depends, FastAPI
+from fastapi_crudrouter import DatabasesCRUDRouter
 
-from fastapi_crudrouter import MemoryCRUDRouter as CRUDRouter
-from gunicorn.util import getcwd
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-
-
-from yretain.app.models import Coupons, Customers, CustomersActivity, ReportFormat
-from yretain.app.models.db import User, create_db_and_tables
-from yretain.app.models.schemas import UserRead, UserCreate, UserUpdate
-from yretain.app.models.users import fastapi_users, auth_backend, current_active_user
-from yretain.config import settings
-from yretain.app.router import root_api_router
-from yretain.app.utils import RedisClient, AiohttpClient
 from yretain.app.exceptions import (
     HTTPException,
     http_exception_handler,
 )
+from yretain.app.models import Customers, ReportFormat
+from yretain.app.models.coupons import coupons, CouponsCreate
+from yretain.app.models.customer import customers, customers_activity, CustomersActivityCreate
+from yretain.app.models.db import User, create_db_and_tables, database, metadata, \
+    sync_engine
+from yretain.app.models.schemas import UserRead, UserCreate, UserUpdate
+from yretain.app.models.users import fastapi_users, auth_backend, current_active_user
+from yretain.app.router import root_api_router
+from yretain.app.utils import RedisClient, AiohttpClient
+from yretain.config import settings
 
 log = logging.getLogger(__name__)
 
@@ -36,6 +35,9 @@ async def on_startup():
 
     AiohttpClient.get_aiohttp_client()
 
+    # Establish the connection pool in AWS RDS MySQL
+    await database.connect()
+
     # Not needed if you set up a migration system like Alembic
     await create_db_and_tables()
 
@@ -51,6 +53,9 @@ async def on_shutdown():
     # Gracefully close utilities.
     if settings.USE_REDIS:
         await RedisClient.close_redis_client()
+
+    # Close all connections in the connection pool in AWS RDS MySQL
+    await database.disconnect()
 
     await AiohttpClient.close_aiohttp_client()
 
@@ -75,7 +80,6 @@ def get_application():
     app.include_router(root_api_router)
     log.debug("Register global exception handler for custom HTTPException.")
     app.add_exception_handler(HTTPException, http_exception_handler)
-
 
     app.include_router(
         fastapi_users.get_auth_router(auth_backend, requires_verification=False),
@@ -102,27 +106,47 @@ def get_application():
         tags=["users"],
     )
 
-    app.include_router(CRUDRouter(schema=Coupons, paginate=10),
+    metadata.create_all(bind=sync_engine)
+
+    app.include_router(DatabasesCRUDRouter(schema=CouponsCreate,
+                                           create_schema=CouponsCreate,
+                                           table=coupons,
+                                           database=database,
+                                           paginate=10),
                        dependencies=[Depends(current_active_user)])
-    app.include_router(CRUDRouter(schema=Customers, paginate=10),
+
+    app.include_router(DatabasesCRUDRouter(schema=Customers,
+                                           create_schema=Customers,
+                                           table=customers,
+                                           database=database,
+                                           paginate=10),
                        dependencies=[Depends(current_active_user)])
-    app.include_router(CRUDRouter(schema=CustomersActivity, paginate=10),
+
+    app.include_router(DatabasesCRUDRouter(schema=CustomersActivityCreate,
+                                           create_schema=CustomersActivityCreate,
+                                           table=customers_activity,
+                                           database=database,
+                                           paginate=10),
                        dependencies=[Depends(current_active_user)])
 
     @app.post("/gen_report/", dependencies=[Depends(current_active_user)])
     async def create_report(report: ReportFormat):
+        # TODO: Trigger
+        from yretain.app.aws.sns import publish_message
+        from yretain.app.aws.sns import topic
+        publish_message(topic, str(report))
         return report
 
-    # launch_ui(getcwd(), "8501")
-    security = HTTPBasic()
-
-    # @app.get("/users/me")
-    # def read_current_user(credentials: HTTPBasicCredentials = Depends(security)):
-    #     return {"username": credentials.username, "password": credentials.password}
+    @app.post("/email_report/", dependencies=[Depends(current_active_user)])
+    async def email_report(report: ReportFormat):
+        # TODO: Trigger
+        from yretain.app.aws.sns import publish_message
+        from yretain.app.aws.sns import topic
+        publish_message(topic, str(report))
+        return report
 
     @app.get("/authenticated-route")
     async def authenticated_route(user: User = Depends(current_active_user)):
         return {"message": f"Hello {user.email}!"}
 
     return app
-

@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 test.db
 *$py.class
++result
++# Elastic Beanstalk Files
++.elasticbeanstalk/*
++!.elasticbeanstalk/*.cfg.yml
++!.elasticbeanstalk/*.global.yml
+elastic_beanstalk/
+users.json
 
 *.egg-info/
 .installed.cfg

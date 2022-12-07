@@ -1,7 +1,5 @@
 """Application implementation - models."""
-from yretain.app.models.coupons import Coupons
-from yretain.app.models.customer import Customers, CustomersActivity, ReportFormat
+from yretain.app.models.coupons import CouponsCreate
+from yretain.app.models.customer import Customers, ReportFormat
 
-__all__ = ["Customers", "Coupons", "CustomersActivity", "ReportFormat"]
-
-
+__all__ = ["Customers", "CouponsCreate", "ReportFormat"]

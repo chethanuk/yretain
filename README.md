@@ -15,6 +15,14 @@ poetry shell
 uvicorn --factory --host 127.0.0.1 --port 8001 --reload yretain.app:get_application
 ```
 
+Deploy to EBS:
+```bash
+cd elastic_beanstalk
+export PROJECT=cpp-yretain
+eb init -r us-east-1 -p docker $PROJECT
+eb create $PROJECT --service-role LabRole --instance_profile LabInstanceProfile --timeout 100
+eb deploy $PROJECT
+```
 
 API To register User:
 

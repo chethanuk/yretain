@@ -1,12 +1,40 @@
 from typing import AsyncGenerator
-
+import os
+import databases
+import sqlalchemy
 from fastapi import Depends
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.ext.declarative import DeclarativeMeta, declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "sqlite+aiosqlite:///./test.db"
+# ASYNC_DB_URL = "sqlite+aiosqlite:///./test.db"
+# TODO: AWS Secrets Manager
+if os.environ.get("ENV", "DEV") == "DEV":
+    BASE_URL = "admin:wi8NTq7yQ8DQCz8@database-1.cujnaavuyxu8.us-east-1.rds.amazonaws.com:3306/yretain"
+    ASYNC_DB_URL = f"mysql+aiomysql://{BASE_URL}"
+    SYNC_DB_URL = f"mysql+pymysql://{BASE_URL}"
+else:
+    from yretain.app.aws.secret import get_secret
+    secret = get_secret("rds-db-credentials/db-4XTCSZKRCJDBARU5RL3DOHO4MY/admin/1670393981455")
+    db = secret['dbInstanceIdentifier']
+    engine = secret['engine']
+    username = secret['username']
+    password = secret['password']
+    BASE_URL = f"{username}:{password}@database-1.cujnaavuyxu8.us-east-1.rds.amazonaws.com:3306/{db}"
+    ASYNC_DB_URL = f"{engine}+aiomysql://{BASE_URL}"
+    SYNC_DB_URL = f"{engine}+pymysql://{BASE_URL}"
+
+database = databases.Database(ASYNC_DB_URL)
+engine = create_async_engine(
+    ASYNC_DB_URL, pool_recycle=3600
+)
+sync_engine = sqlalchemy.create_engine(
+    SYNC_DB_URL
+)
+metadata = sqlalchemy.MetaData()
+# engine = create_async_engine(ASYNC_DB_URL)
+async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 Base: DeclarativeMeta = declarative_base()
 
 
@@ -14,8 +42,16 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     pass
 
 
-engine = create_async_engine(DATABASE_URL)
-async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async def create_sync_db_tables():
+    # Establish the connection pool in AWS RDS MySQL
+    # await database.connect()
+    metadata.create_all(bind=sync_engine)
+    await database.disconnect()
+
+
+async def disconnect_db():
+    # Close all connections in the connection pool in AWS RDS MySQL
+    await database.disconnect()
 
 
 async def create_db_and_tables():

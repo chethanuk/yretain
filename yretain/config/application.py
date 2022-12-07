@@ -28,10 +28,10 @@ class Application(BaseSettings):
     """
 
     DEBUG: bool = True
-    PROJECT_NAME: str = "yretain"
+    PROJECT_NAME: str = "USER_MANAGEMENT"
     VERSION: str = __version__
     DOCS_URL: str = "/"
-    USE_REDIS: bool = True
+    USE_REDIS: bool = False
 
     # All your additional application configuration should go either here or in
     # separate file in this submodule.
