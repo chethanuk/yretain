@@ -16,7 +16,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.9"
 fastapi = "~0.85.0"
 uvicorn = {extras = ["standard"], version = "~0.18.3"}
 gunicorn = "~20.1.0"
@@ -25,6 +25,9 @@ aioredis = "~2.0.1"
 aiohttp = "~3.8.3"
 fastapi-crudrouter = "^0.8.5"
 opyrator = "^0.0.12"
+fastapi-users = {extras = ["sqlalchemy"], version = "^10.2.1"}
+aiosqlite = "^0.17.0"
+databases = {extras = ["aiosqlite", "aiomysql"], version = "^0.6.2"}
 
 [tool.poetry.dev-dependencies]
 pytest = "~7.1.3"

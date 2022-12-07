@@ -6,6 +6,36 @@
 
 ---
 
+### Run Locally:
+
+```bash
+#Start poetry shell
+poetry shell
+# Run app
+uvicorn --factory --host 127.0.0.1 --port 8001 --reload yretain.app:get_application
+```
+
+
+API To register User:
+
+```bash
+curl -X 'POST' \
+  'http://127.0.0.1:8001/auth/register' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "email": "vishwas1@example.com",
+  "password": "vishwas1",
+  "is_active": true,
+  "is_superuser": false,
+  "is_verified": false
+}'
+
+Response: 
+{"id":"d360681b-4260-4678-82b2-e7c42d8bad03","email":"vishwas1@example.com","is_active":true,"is_superuser":false,"is_verified":false}%   
+
+```
+
 ### Documentation
 
 You should have documentation deployed to your project GitHub pages via [Build Docs workflow](https://yretain.com/actions/workflows/docs.yml)

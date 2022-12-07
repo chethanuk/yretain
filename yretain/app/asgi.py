@@ -1,10 +1,17 @@
 """Application implementation - ASGI."""
 import logging
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
+
 from fastapi_crudrouter import MemoryCRUDRouter as CRUDRouter
+from gunicorn.util import getcwd
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+
 
 from yretain.app.models import Coupons, Users
+from yretain.app.models.db import User, create_db_and_tables
+from yretain.app.models.schemas import UserRead, UserCreate, UserUpdate
+from yretain.app.models.users import fastapi_users, auth_backend, current_active_user
 from yretain.config import settings
 from yretain.app.router import root_api_router
 from yretain.app.utils import RedisClient, AiohttpClient
@@ -12,7 +19,6 @@ from yretain.app.exceptions import (
     HTTPException,
     http_exception_handler,
 )
-
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +35,9 @@ async def on_startup():
         await RedisClient.open_redis_client()
 
     AiohttpClient.get_aiohttp_client()
+
+    # Not needed if you set up a migration system like Alembic
+    await create_db_and_tables()
 
 
 async def on_shutdown():
@@ -66,7 +75,46 @@ def get_application():
     app.include_router(root_api_router)
     log.debug("Register global exception handler for custom HTTPException.")
     app.add_exception_handler(HTTPException, http_exception_handler)
-    app.include_router(CRUDRouter(schema=Coupons, paginate=10))
-    app.include_router(CRUDRouter(schema=Users, paginate=10))
+
+
+    app.include_router(
+        fastapi_users.get_auth_router(auth_backend, requires_verification=False),
+        prefix="/auth/jwt", tags=["auth"]
+    )
+    app.include_router(
+        fastapi_users.get_register_router(UserRead, UserCreate),
+        prefix="/auth",
+        tags=["auth"],
+    )
+    app.include_router(
+        fastapi_users.get_reset_password_router(),
+        prefix="/auth",
+        tags=["auth"],
+    )
+    app.include_router(
+        fastapi_users.get_verify_router(UserRead),
+        prefix="/auth",
+        tags=["auth"],
+    )
+    app.include_router(
+        fastapi_users.get_users_router(UserRead, UserUpdate),
+        prefix="/users",
+        tags=["users"],
+    )
+
+    app.include_router(CRUDRouter(schema=Coupons, paginate=10), dependencies=[Depends(current_active_user)])
+    app.include_router(CRUDRouter(schema=Users, paginate=10), dependencies=[Depends(current_active_user)])
+
+    # launch_ui(getcwd(), "8501")
+    security = HTTPBasic()
+
+    # @app.get("/users/me")
+    # def read_current_user(credentials: HTTPBasicCredentials = Depends(security)):
+    #     return {"username": credentials.username, "password": credentials.password}
+
+    @app.get("/authenticated-route")
+    async def authenticated_route(user: User = Depends(current_active_user)):
+        return {"message": f"Hello {user.email}!"}
 
     return app
+
