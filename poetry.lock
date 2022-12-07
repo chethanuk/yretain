@@ -430,7 +430,7 @@ sqlalchemy = ["fastapi-users-db-sqlalchemy (>=4.0.0)"]
 [[package]]
 name = "fastapi-users-db-sqlalchemy"
 version = "4.0.3"
-description = "FastAPI Users database adapter for SQLAlchemy."
+description = "FastAPI Customers database adapter for SQLAlchemy."
 category = "main"
 optional = false
 python-versions = ">=3.7"

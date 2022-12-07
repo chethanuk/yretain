@@ -31,7 +31,8 @@ class Application(BaseSettings):
     PROJECT_NAME: str = "yretain"
     VERSION: str = __version__
     DOCS_URL: str = "/"
-    USE_REDIS: bool = False
+    USE_REDIS: bool = True
+
     # All your additional application configuration should go either here or in
     # separate file in this submodule.
 

@@ -8,7 +8,7 @@ from gunicorn.util import getcwd
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 
-from yretain.app.models import Coupons, Users
+from yretain.app.models import Coupons, Customers, CustomersActivity, ReportFormat
 from yretain.app.models.db import User, create_db_and_tables
 from yretain.app.models.schemas import UserRead, UserCreate, UserUpdate
 from yretain.app.models.users import fastapi_users, auth_backend, current_active_user
@@ -102,8 +102,16 @@ def get_application():
         tags=["users"],
     )
 
-    app.include_router(CRUDRouter(schema=Coupons, paginate=10), dependencies=[Depends(current_active_user)])
-    app.include_router(CRUDRouter(schema=Users, paginate=10), dependencies=[Depends(current_active_user)])
+    app.include_router(CRUDRouter(schema=Coupons, paginate=10),
+                       dependencies=[Depends(current_active_user)])
+    app.include_router(CRUDRouter(schema=Customers, paginate=10),
+                       dependencies=[Depends(current_active_user)])
+    app.include_router(CRUDRouter(schema=CustomersActivity, paginate=10),
+                       dependencies=[Depends(current_active_user)])
+
+    @app.post("/gen_report/", dependencies=[Depends(current_active_user)])
+    async def create_report(report: ReportFormat):
+        return report
 
     # launch_ui(getcwd(), "8501")
     security = HTTPBasic()
