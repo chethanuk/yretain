@@ -134,8 +134,25 @@ def get_application():
         # TODO: Trigger
         from yretain.app.aws.sns import publish_message
         from yretain.app.aws.sns import topic
-        publish_message(topic, str(report))
-        return report
+        import boto3
+        import json
+
+        lambda_client = boto3.client('lambda', region_name="us-east-1")
+
+        test_event = dict()
+        # APi -> Lambda -> MySQl Report -> S3-> SNS -> EMAIL
+
+        response = lambda_client.invoke(
+          FunctionName='lam-new',
+          Payload=json.dumps(test_event),
+        )
+
+        msg = f"{str(report)}_{response['s3']}"
+        print(response['Payload'].read().decode("utf-8"))
+
+        publish_message(topic, str(msg))
+
+        return msg
 
     @app.post("/email_report/", dependencies=[Depends(current_active_user)])
     async def email_report(report: ReportFormat):

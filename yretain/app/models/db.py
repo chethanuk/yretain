@@ -15,6 +15,7 @@ if os.environ.get("ENV", "DEV") == "DEV":
     ASYNC_DB_URL = f"mysql+aiomysql://{BASE_URL}"
     SYNC_DB_URL = f"mysql+pymysql://{BASE_URL}"
 else:
+    # Only when Production env or staging env - We AWS
     from yretain.app.aws.secret import get_secret
     secret = get_secret("rds-db-credentials/db-4XTCSZKRCJDBARU5RL3DOHO4MY/admin/1670393981455")
     db = secret['dbInstanceIdentifier']

@@ -2,9 +2,9 @@ import json
 
 import boto3
 
-sns = boto3.resource("sns")
+sns = boto3.resource("sns", region_name="us-east-1")
 
-sqs = boto3.client("sqs", region_name="us-west-2")
+sqs = boto3.client("sqs", region_name="us-east-1")
 
 
 def create_queue(name="customer-discounts-queue"):

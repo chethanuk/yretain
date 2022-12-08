@@ -6,18 +6,18 @@
 import boto3
 from botocore.exceptions import ClientError
 
-def create_topic(name):
-    """
-    Creates a notification topic.
-
-    :param name: The name of the topic to create.
-    :return: The newly created topic.
-    """
-    sns = boto3.resource("sns")
-    topic = sns.create_topic(Name=name)
-    return topic
-
-print(create_topic("customer-discounts"))
+# def create_topic(name):
+#     """
+#     Creates a notification topic.
+#
+#     :param name: The name of the topic to create.
+#     :return: The newly created topic.
+#     """
+#     sns = boto3.resource("sns")
+#     topic = sns.create_topic(Name=name)
+#     return topic
+#
+# print(create_topic("customer-discounts"))
 # arn:aws:sns:us-east-1:470594810414:learnaws-boto3-sns
 
 

@@ -17,11 +17,17 @@ uvicorn --factory --host 127.0.0.1 --port 8001 --reload yretain.app:get_applicat
 
 Deploy to EBS:
 ```bash
+mkdir elastic_beanstalk
 cd elastic_beanstalk
-export PROJECT=cpp-yretain
+export PROJECT=cpp-project-x21205825
 eb init -r us-east-1 -p docker $PROJECT
 eb create $PROJECT --service-role LabRole --instance_profile LabInstanceProfile --timeout 100
 eb deploy $PROJECT
+```
+
+```bash
+docker build -t 470594810414.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3 .  
+docker push 470594810414.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3
 ```
 
 API To register User:

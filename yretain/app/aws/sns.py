@@ -1,6 +1,6 @@
 import boto3
 
-sns = boto3.resource("sns")
+sns = boto3.resource("sns", region_name="us-east-1")
 
 
 def create_topic(name):
@@ -16,7 +16,7 @@ def create_topic(name):
 
 def publish_message(topic, message):
     """
-    Publishes a message to a topic.
+    Publishes a message to a SNS topic.
 
     :param topic: The topic to publish to.
     :param message: The message to publish.
