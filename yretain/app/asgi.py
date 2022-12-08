@@ -131,6 +131,10 @@ def get_application():
 
     @app.post("/gen_report/", dependencies=[Depends(current_active_user)])
     async def create_report(report: ReportFormat):
+        """Generate Report contain users discount codes
+
+        Trigger AWS Lambda and query AWS RDS MySQL and upload report to S3
+        """
         # TODO: Trigger
         from yretain.app.aws.sns import publish_message
         from yretain.app.aws.sns import topic
@@ -140,15 +144,16 @@ def get_application():
         lambda_client = boto3.client('lambda', region_name="us-east-1")
 
         test_event = dict()
-        # APi -> Lambda -> MySQl Report -> S3-> SNS -> EMAIL
+        # APi -> Lambda -> AWS RDS MySQl Report -> S3-> SNS -> EMAIL
 
         response = lambda_client.invoke(
           FunctionName='lam-new',
           Payload=json.dumps(test_event),
         )
 
-        msg = f"{str(report)}_{response['s3']}"
-        print(response['Payload'].read().decode("utf-8"))
+        response_payload = response['Payload'].read().decode("utf-8")
+        print(f"lambda response payload: {response_payload}")
+        msg = f"{str(report)} {response_payload['s3']}"
 
         publish_message(topic, str(msg))
 
@@ -156,7 +161,12 @@ def get_application():
 
     @app.post("/email_report/", dependencies=[Depends(current_active_user)])
     async def email_report(report: ReportFormat):
-        # TODO: Trigger
+        """Once the Report is generated call email report to send report is avilable to users:
+        - Customer Retention team
+        - Marketing team
+
+        Trigger AWS SNS and send email to users
+        """
         from yretain.app.aws.sns import publish_message
         from yretain.app.aws.sns import topic
         publish_message(topic, str(report))
