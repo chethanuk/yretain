@@ -29,7 +29,7 @@ fastapi-users = {extras = ["sqlalchemy"], version = "^10.2.1"}
 aiosqlite = "^0.17.0"
 databases = {extras = ["aiosqlite", "aiomysql"], version = "^0.6.2"}
 PyMySQL = "^1.0.2"
-boto3 = "^1.26.24"
+boto3 = "^1.26.41"
 
 [tool.poetry.dev-dependencies]
 pytest = "~7.1.3"
