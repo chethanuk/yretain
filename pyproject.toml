@@ -27,7 +27,7 @@ fastapi-crudrouter = "^0.8.5"
 opyrator = "^0.0.12"
 fastapi-users = {extras = ["sqlalchemy"], version = "^10.2.1"}
 aiosqlite = "^0.17.0"
-databases = {extras = ["aiosqlite", "aiomysql"], version = "^0.6.2"}
+databases = {extras = ["aiosqlite", "aiomysql"], version = "^0.7.0"}
 PyMySQL = "^1.0.2"
 boto3 = "^1.26.24"
 
