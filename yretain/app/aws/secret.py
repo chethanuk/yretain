@@ -46,4 +46,4 @@ def get_secret(secret_name="prod/mysql", region_name="us-east-1"):
     # Your code goes here.
     return secret
 
-print(get_secret("rds-db-credentials/db-4XTCSZKRCJDBARU5RL3DOHO4MY/admin/1670393981455"))
+print(get_secret("rds-db-credentials"))

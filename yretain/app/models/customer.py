@@ -44,8 +44,10 @@ class CustomersActivityCreate(BaseModel):
     # is_food: bool = False
     # is_delivery: bool = False
 
+
 class CustomersActivity(CustomersActivityCreate):
     id: int
+#
 
 
 reports = Table(

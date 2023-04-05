@@ -11,18 +11,19 @@ from sqlalchemy.orm import sessionmaker
 # ASYNC_DB_URL = "sqlite+aiosqlite:///./test.db"
 # TODO: AWS Secrets Manager
 if os.environ.get("ENV", "DEV") == "DEV":
-    BASE_URL = "admin:wi8NTq7yQ8DQCz8@database-1.cujnaavuyxu8.us-east-1.rds.amazonaws.com:3306/yretain"
+    BASE_URL = "admin:Y4eOI6fL6ASu$7YVwqeET:S83.kX@retain.cngfeig7wcxn.us-east-1.rds.amazonaws.com:3306/yretain"
     ASYNC_DB_URL = f"mysql+aiomysql://{BASE_URL}"
     SYNC_DB_URL = f"mysql+pymysql://{BASE_URL}"
 else:
     # Only when Production env or staging env - We AWS
     from yretain.app.aws.secret import get_secret
-    secret = get_secret("rds-db-credentials/db-4XTCSZKRCJDBARU5RL3DOHO4MY/admin/1670393981455")
-    db = secret['dbInstanceIdentifier']
-    engine = secret['engine']
+
+    secret = get_secret("rds!db-53413df9-246b-4e13-9606-77f6412295af")
+    db = "yretain"  # secret['dbInstanceIdentifier']
+    engine = "mysql"  # secret['engine']
     username = secret['username']
     password = secret['password']
-    BASE_URL = f"{username}:{password}@database-1.cujnaavuyxu8.us-east-1.rds.amazonaws.com:3306/{db}"
+    BASE_URL = f"{username}:{password}@database-1.cngfeig7wcxn.us-east-1.rds.amazonaws.com:3306/{db}"
     ASYNC_DB_URL = f"{engine}+aiomysql://{BASE_URL}"
     SYNC_DB_URL = f"{engine}+pymysql://{BASE_URL}"
 
