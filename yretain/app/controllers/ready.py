@@ -50,4 +50,7 @@ async def readiness_check():
         )
     # MYSQL
 
+    # Redis Key
+    # RedisClient.set("key", "value")
+
     return ReadyResponse(status="ok")

@@ -23,7 +23,7 @@ else:
     engine = "mysql"  # secret['engine']
     username = secret['username']
     password = secret['password']
-    BASE_URL = f"{username}:{password}@database-1.cngfeig7wcxn.us-east-1.rds.amazonaws.com:3306/{db}"
+    BASE_URL = f"{username}:{password}@retain.cngfeig7wcxn.us-east-1.rds.amazonaws.com:3306/{db}"
     ASYNC_DB_URL = f"{engine}+aiomysql://{BASE_URL}"
     SYNC_DB_URL = f"{engine}+pymysql://{BASE_URL}"
 

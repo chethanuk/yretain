@@ -160,17 +160,22 @@ def get_application():
         return msg
 
     @app.post("/email_report/", dependencies=[Depends(current_active_user)])
-    async def email_report(report: ReportFormat):
+    async def email_report(report: ReportFormat, use_aws_sns: bool = False):
         """Once the Report is generated call email report to send report is avilable to users:
         - Customer Retention team
         - Marketing team
 
         Trigger AWS SNS and send email to users
         """
-        from yretain.app.aws.sns import publish_message
-        from yretain.app.aws.sns import topic
-        publish_message(topic, str(report))
-        return report
+        if use_aws_sns:
+            from yretain.app.aws.sns import publish_message
+            from yretain.app.aws.sns import topic
+            publish_message(topic, str(report))
+            return report
+        else:
+            # TODO: Implement email report
+            pass
+
 
     @app.get("/authenticated-route")
     async def authenticated_route(user: User = Depends(current_active_user)):

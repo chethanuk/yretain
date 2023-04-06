@@ -25,7 +25,7 @@ class Redis(BaseSettings):
 
     """
 
-    REDIS_HOST: str = "127.0.0.1"
+    REDIS_HOST: str = "apistore.njk4p4.ng.0001.use1.cache.amazonaws.com"
     REDIS_PORT: int = 6379
     REDIS_USERNAME: str = None
     REDIS_PASSWORD: str = None

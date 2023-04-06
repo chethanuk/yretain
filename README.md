@@ -1,4 +1,5 @@
 
+
 # yretain
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 ![GitHub](https://img.shields.io/badge/fastapi-v.0.85.0-blue)
@@ -20,15 +21,15 @@ Deploy to EBS:
 ```bash
 mkdir elastic_beanstalk
 cd elastic_beanstalk
-export PROJECT=cpp-project-x21205825
+export PROJECT=backend
 eb init -r us-east-1 -p docker $PROJECT
 eb create $PROJECT --service-role LabRole --instance_profile LabInstanceProfile --timeout 100
 eb deploy $PROJECT
 ```
 
 ```bash
-docker build -t 470594810414.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3 .  
-docker push 470594810414.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3
+docker build -t 875366127718.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3 .  
+docker push 875366127718.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3
 ```
 
 API To register User:

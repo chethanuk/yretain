@@ -1,8 +1,8 @@
 import requests
 
 # FastAPI endpoint URL
-API_BASE_URL = "http://127.0.0.1:8001"
-
+# API_BASE_URL = "http://127.0.0.1:8001"
+API_BASE_URL = "http://cpp-backend.eba-f375m667.us-east-1.elasticbeanstalk.com"
 
 def get_access_token(url=f'{API_BASE_URL}/auth/jwt/login',
                      username='vishwas1@example.com',
