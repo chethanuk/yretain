@@ -1,6 +1,6 @@
 version: '3.8'
 services:
   beanstalk-flask:
-    image: "875366127718.dkr.ecr.us-east-1.amazonaws.com/yretain:05-frontend"
+    image: "875366127718.dkr.ecr.us-east-1.amazonaws.com/yretain:06-frontend"
     ports:
       - "80:80"

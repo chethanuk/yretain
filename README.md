@@ -19,17 +19,30 @@ uvicorn --factory --host 127.0.0.1 --port 8001 --reload yretain.app:get_applicat
 
 Deploy to EBS:
 ```bash
-mkdir elastic_beanstalk
-cd elastic_beanstalk
-export PROJECT=backend
+cd ebs/backend
+export PROJECT=scp-backend
 eb init -r us-east-1 -p docker $PROJECT
 eb create $PROJECT --service-role LabRole --instance_profile LabInstanceProfile --timeout 100
 eb deploy $PROJECT
+
+cd ebs/frontend
+export PROJECT=scp-frontend
+eb init -r us-east-1 -p docker $PROJECT
+eb create $PROJECT --service-role LabRole --instance_profile LabInstanceProfile --timeout 100
+eb deploy $PROJECT
+
 ```
 
 ```bash
-docker build -t 875366127718.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3 .  
-docker push 875366127718.dkr.ecr.us-east-1.amazonaws.com/yretain:0.3
+# Backend Image
+export TAG=09-backend
+export ECR=875366127718.dkr.ecr.us-east-1.amazonaws.com
+docker build -t $ECR/yretain:$TAG . ; docker push $ECR/yretain:$TAG
+
+# Frontend Image
+export TAG=06-frontend
+export ECR=875366127718.dkr.ecr.us-east-1.amazonaws.com
+docker build -t $ECR/yretain:$TAG -f frontend.Dockerfile . ; docker push $ECR/yretain:$TAG
 ```
 
 API To register User:
