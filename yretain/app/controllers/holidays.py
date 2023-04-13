@@ -12,6 +12,35 @@ from starlette.responses import RedirectResponse
 
 from yretain.app.exceptions import HTTPException
 from yretain.config import redis as redis_conf
+import io
+import pandas as pd
+import boto3
+import sqlalchemy
+from sqlalchemy.pool import QueuePool
+import requests
+
+ISTEMPMAIL_API_KEY = "53u2bN5W19qoQPp5k2jvNapQWAtgTwPA"
+ISTEMPMAIL_API_URL = "https://www.istempmail.com/api/check"
+
+# To get list of buckets present in AWS using S3 client
+s3 = boto3.client('s3')
+AWS_S3_BUCKET = "yathena"
+
+# RDS database configuration
+DB_USER = "admin"
+DB_PASSWORD = "wi8NTq7yQ8DQCz8"
+DB_NAME = "yretain"
+DB_HOST = "database-1.cujnaavuyxu8.us-east-1.rds.amazonaws.com"
+DB_PORT = 3306
+
+# SQLAlchemy connection engine
+db_engine = sqlalchemy.create_engine(
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
+    poolclass=QueuePool,
+    pool_recycle=3600,
+    pool_size=10
+)
+
 
 router = APIRouter(tags=["holidays"],
                    summary="API to Ingest Holiday data", )
@@ -35,6 +64,24 @@ class Holiday:
     def __init__(self, name: str, date: str):
         self.name = name
         self.date = datetime.strptime(date, '%Y-%m-%d').date()
+
+
+def is_valid_email(email: str) -> bool:
+    """
+    Checks if an email address is valid using the istempmail.com API.
+
+    Args:
+        email (str): The email address to check.
+
+    Returns:
+        bool: True if the email is valid, False otherwise.
+    """
+    domain = email.split("@")[1]
+    url = f"{ISTEMPMAIL_API_URL}/{ISTEMPMAIL_API_KEY}/{domain}"
+    response = requests.get(url)
+    response.raise_for_status()  # raise an exception if the request was unsuccessful
+    data = response.json()
+    return not data["blocked"]
 
 
 # define the process_holidays function
@@ -170,8 +217,8 @@ async def get_holidays_in_range(country_code: str, start_date: str, end_date: st
     return {"holidays": holiday_list}
 
 
-@router.get("/is_holiday/{country_code}/{date}")
-async def is_holiday(country_code: str, date: str):
+@router.get("/gen_codes/{country_code}/{date}")
+async def gen_codes(country_code: str, date: str):
     """
     Check if a given date is a holiday in a given country.
 
@@ -214,6 +261,91 @@ async def is_holiday(country_code: str, date: str):
     matching_holiday = next((h for h in holidays if h.date == holiday_date), None)
 
     if matching_holiday:
-        return {"message": f"{matching_holiday.name} is a holiday in {country_code}"}
+        HOLIDAY_3 = "INSTANT_10_UPTO_100"
+        HOLIDAY_5 = "INSTANT_20_UPTO_100"
+        HOLIDAY_8 = "INSTANT_30_UPTO_100"
+        HOLIDAY_10 = "INSTANT_40_UPTO_100"
     else:
-        return {"message": f"{date} is not a holiday in {country_code}"}
+        HOLIDAY_3 = "INSTANT_15_UPTO_100"
+        HOLIDAY_5 = "INSTANT_25_UPTO_100"
+        HOLIDAY_8 = "INSTANT_35_UPTO_100"
+        HOLIDAY_10 = "INSTANT_45_UPTO_100"
+
+    query = f"""
+    WITH last_activity AS (
+        select phone_number,
+            MAX(updated) AS last_order_time,
+            CURRENT_TIMESTAMP as now
+        from yretain.customers_activity
+        GROUP BY phone_number
+    ),
+    customer_inactive AS (
+        SELECT *,
+               datediff(now, last_order_time) as inactive_days
+        FROM last_activity
+    )
+    SELECT *,
+        CASE
+            WHEN inactive_days < 3 THEN '{HOLIDAY_3}'
+            WHEN inactive_days < 5 THEN '{HOLIDAY_5}'
+            WHEN inactive_days < 8 THEN '{HOLIDAY_8}'
+            WHEN inactive_days < 10 THEN '{HOLIDAY_10}'
+        END AS DISCOUNTS
+    FROM customer_inactive;
+    """
+
+    cus_discounts_df = pd.read_sql(query, db_engine)
+    print(cus_discounts_df.head())
+
+    full_s3_path = f"s3://{AWS_S3_BUCKET}/reports/customers/discounts_latest.csv"
+    with io.StringIO() as csv_buffer:
+        cus_discounts_df.to_csv(csv_buffer, index=False)
+
+        response = s3.put_object(
+            Bucket=AWS_S3_BUCKET,
+            Key="reports/customers/discounts_latest.csv",
+            Body=csv_buffer.getvalue()
+        )
+
+        status = response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+
+        if status == 200:
+            print(f"Successful S3 put_object response. Status - {status}")
+        else:
+            print(f"Unsuccessful S3 put_object response. Status - {status}")
+
+    # TODO Convert dataframe to dict and call pdf API to generate pdf
+    # TODO Upload pdf to S3
+    email = "chethan.u7@gmail.com"
+    if is_valid_email(email):
+        print(f"{email} is a valid email address - Sending email")
+        
+        MAILGUN_URL = "https://api.mailgun.net/v3/sandbox65061d43c1e546649db73f3fbe845445.mailgun.org/messages"
+        API_KEY = "730d843b3d6d0e352757a9d188471e1c-2cc48b29-b0f2dec9"
+        FROM_EMAIL = "Mailgun Sandbox <postmaster@sandbox65061d43c1e546649db73f3fbe845445.mailgun.org>"
+        TO_EMAIL = f"Chethan Umesha <{email}>"
+        print(TO_EMAIL)
+        SUBJECT = "Coupons report email"
+        MESSAGE = f"Congratulations Chethan Umesha, new coupons is generated its in location: {full_s3_path}!"
+        
+        try:
+            response = requests.post(MAILGUN_URL,
+                auth=("api", API_KEY),
+                data={
+                    "from": FROM_EMAIL,
+                    "to": TO_EMAIL,
+                    "subject": SUBJECT,
+                    "text": MESSAGE
+                }
+            )
+            response.raise_for_status()  # raises an exception if the status code is not 2xx
+            print(f"Email sent successfully: {response}")
+            # return True
+        except requests.exceptions.RequestException as e:
+            print(f"Error sending email: {e}")
+            # return False
+        
+    else:
+        print(f"{email} is not a valid email address - Can't send email")
+
+    return full_s3_path
